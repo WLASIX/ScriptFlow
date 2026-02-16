@@ -10,12 +10,14 @@ import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.LinearLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.amrdeveloper.codeview.CodeView
 import androidx.core.graphics.toColorInt
 import androidx.core.view.GravityCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.documentfile.provider.DocumentFile
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -23,15 +25,18 @@ import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
 
-    private var isRunning = false
     private lateinit var fabExecute: FloatingActionButton
     private lateinit var itemOpen: LinearLayout
     private lateinit var itemSave: LinearLayout
     private lateinit var codeView: CodeView
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var btnOptions: ImageView
-    private var currentFileUri: Uri? = null
+    private lateinit var txtFileName: TextView
 
+    private var isDirty = false
+    private var currentFileName = "script.py"
+    private var currentFileUri: Uri? = null
+    private var isRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,10 +49,13 @@ class MainActivity : AppCompatActivity() {
         drawerLayout = findViewById(R.id.drawerLayout)
         btnOptions = findViewById(R.id.btnOptions)
         fabExecute = findViewById(R.id.fabExecute)
+        txtFileName = findViewById(R.id.txtFileName)
+
 
         setPairs()
         setSyntax()
 
+        txtFileName.text = "script.py"
         codeView.setText("print(\"Hello World\")")
 
         // Пока не обрабатывается табуляция
@@ -67,6 +75,12 @@ class MainActivity : AppCompatActivity() {
         codeView.enablePairCompleteCenterCursor(true);
 
         // Listeners
+        codeView.addTextChangedListener {
+            if (!isDirty) {
+                isDirty = true
+                updateFileTitle()
+            }
+        }
         fabExecute.setOnClickListener {
             toggleRunState()
         }
@@ -122,8 +136,20 @@ class MainActivity : AppCompatActivity() {
     private fun writeFile(uri: Uri) {
         contentResolver.openOutputStream(uri, "wt")?.use { output ->
             output.write(codeView.text.toString().toByteArray())
+
+            isDirty = false
+            updateFileTitle()
         }
     }
+
+    private fun updateFileTitle() {
+        txtFileName.text = if (isDirty) {
+            "$currentFileName *"
+        } else {
+            currentFileName
+        }
+    }
+
 
 // ================= PAIRS =================
 
@@ -217,6 +243,11 @@ class MainActivity : AppCompatActivity() {
 
             codeView.setText(text)
             currentFileUri = uri
+            txtFileName.text = getFileName(uri)
+
+            currentFileName = getFileName(uri)
+            isDirty = false
+            updateFileTitle()
         }
 
 // ================= SAVE =================

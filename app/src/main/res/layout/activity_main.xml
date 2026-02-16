@@ -39,6 +39,19 @@
                         android:clickable="true"
                         android:background="?attr/selectableItemBackgroundBorderless"/>
 
+                    <TextView
+                        android:id="@+id/txtFileName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:text="script.py"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:maxLines="1"
+                        android:ellipsize="end"/>
+
                         <!-- ПРАВЫЙ БЛОК -->
                         <LinearLayout
                             android:layout_width="match_parent"
