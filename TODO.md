@@ -18,7 +18,7 @@
 - ✅ Логирование в консоль
 
 ### Переписать нормально код по модулям
-- ❌ Ввести `toolbar_menu.xml` (перенести из `activity_main.xml` шапку)
+- ✅ Ввести `toolbar_menu.xml` (перенести из `activity_main.xml` шапку)
 - ❌ Ввести `editor/EditorState.kt`, отвечающий за состояние редактора 
 - ❌ Ввести `file/FileManager.kt`, отвечающий за всю работу SAF
 - ❌ Ввести `ui/toolbar/ToolbarController.kt`, отвечающий за UI логику тулбара 
