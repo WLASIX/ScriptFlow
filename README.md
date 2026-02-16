@@ -5,12 +5,9 @@ ScriptFlow — Android проект IDE для редактирования Pyth
 <p align="center">
   <img src="https://img.shields.io/badge/platform-Android-white" />
   <img src="https://img.shields.io/badge/language-Kotlin-white" />
+  <img src="https://img.shields.io/badge/license-MIT-white" />
   <a href="./TODO.md">
     <img src="https://img.shields.io/badge/roadmap-TODO.md-white" />
-  </a>
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-white" />
-  </a>
 </p>
 
 
