@@ -21,7 +21,7 @@
 - ✅ Ввести `toolbar_menu.xml` (перенести из `activity_main.xml` шапку)
 - ✅ Ввести `editor/EditorState.kt`, отвечающий за состояние редактора 
 - ✅ Ввести `editor/EditorController.kt`, отвечающий за отделение CodeView от Activity
-- ❌ Ввести `editor/FileController.kt`, отвечающий за всю работу SAF
+- ✅ Ввести `editor/FileController.kt`, отвечающий за всю работу SAF
 - ❌ Ввести `ui/toolbar/ToolbarController.kt`, отвечающий за UI логику тулбара 
 - ❌ Ввести `runtime/RunController.kt`, отвечающий за управление состоянием (пока заглушка)
 

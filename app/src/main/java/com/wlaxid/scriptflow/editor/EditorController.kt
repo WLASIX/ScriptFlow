@@ -7,7 +7,6 @@ import java.util.regex.Pattern
 
 class EditorController(
     private val codeView: CodeView,
-    private val editorState: EditorState
 
 ) {
 
