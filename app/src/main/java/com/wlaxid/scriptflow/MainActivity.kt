@@ -13,19 +13,20 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.toColorInt
 import androidx.core.view.GravityCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.documentfile.provider.DocumentFile
 import androidx.drawerlayout.widget.DrawerLayout
 import com.amrdeveloper.codeview.CodeView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.wlaxid.scriptflow.editor.EditorController
 import com.wlaxid.scriptflow.editor.EditorState
-import java.util.regex.Pattern
+import androidx.core.graphics.toColorInt
 
 class MainActivity : AppCompatActivity() {
 
     private val editorState = EditorState()
+    private lateinit var editorController: EditorController
 
     private lateinit var codeView: CodeView
     private lateinit var drawerLayout: DrawerLayout
@@ -60,18 +61,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupEditor() {
-        codeView.setText("print(\"Hello World\")")
-        codeView.setTabLength(4)
-        codeView.setEnableLineNumber(true)
-        codeView.setLineNumberTextSize(50f)
-        codeView.setLineNumberTextColor(Color.WHITE)
-        codeView.setEnableHighlightCurrentLine(true)
-        codeView.setHighlightCurrentLineColor(Color.GRAY)
-        codeView.enablePairComplete(true)
-        codeView.enablePairCompleteCenterCursor(true)
+        editorController = EditorController(codeView, editorState)
+        editorController.init()
 
-        setPairs()
-        setSyntax()
+        editorController.setText("print(\"Hello World\")")
     }
 
     private fun setupListeners() {
@@ -125,7 +118,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(codeView.windowToken, 0)
     }
 
@@ -137,7 +130,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun writeFile(uri: Uri) {
         contentResolver.openOutputStream(uri, "wt")?.use {
-            it.write(codeView.text.toString().toByteArray())
+            it.write(editorController.getText().toByteArray())
         }
     }
 
@@ -157,13 +150,15 @@ class MainActivity : AppCompatActivity() {
 
             val name = getFileName(uri)
 
-            codeView.setText(text)
+            editorController.setText(text)
             editorState.onFileOpened(uri, name)
             updateTitle()
         }
 
     private val saveFileLauncher =
-        registerForActivityResult(ActivityResultContracts.CreateDocument("text/x-python")) { uri ->
+        registerForActivityResult(
+            ActivityResultContracts.CreateDocument("text/x-python")
+        ) { uri ->
             uri ?: return@registerForActivityResult
 
             writeFile(uri)
@@ -181,40 +176,11 @@ class MainActivity : AppCompatActivity() {
         if (isRunning) {
             fabExecute.setImageResource(R.drawable.ic_stop)
             fabExecute.backgroundTintList =
-                ColorStateList.valueOf(Color.parseColor("#E53935"))
+                ColorStateList.valueOf("#E53935".toColorInt())
         } else {
             fabExecute.setImageResource(R.drawable.ic_start)
             fabExecute.backgroundTintList =
-                ColorStateList.valueOf(Color.parseColor("#2ECC71"))
+                ColorStateList.valueOf("#2ECC71".toColorInt())
         }
-    }
-
-    // ================= SYNTAX =================
-
-    private fun setPairs() {
-        codeView.setPairCompleteMap(
-            hashMapOf(
-                '{' to '}',
-                '[' to ']',
-                '(' to ')',
-                '"' to '"',
-                '\'' to '\''
-            )
-        )
-    }
-
-    private fun setSyntax() {
-        val keywords = listOf(
-            "False","None","True","and","as","assert","break","class","continue","def","del",
-            "elif","else","except","finally","for","from","global","if","import","in","is",
-            "lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
-            "async","await"
-        )
-
-        val map = mutableMapOf<Pattern, Int>()
-        map[("\\b(${keywords.joinToString("|")})\\b").toRegex().toPattern()] = "#569CD6".toColorInt()
-
-        codeView.setSyntaxPatternsMap(map)
-        codeView.reHighlightSyntax()
     }
 }
