@@ -14,16 +14,18 @@
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="0dp">
 
         <!-- MENU -->
         <ImageView
             android:id="@+id/btnOptions"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
             android:src="@drawable/ic_options"
             android:clickable="true"
+            android:tooltipText="@string/toolbar_menu"
+            android:contentDescription="@string/toolbar_menu"
             android:background="?attr/selectableItemBackgroundBorderless" />
 
         <!-- TITLE -->
@@ -34,11 +36,13 @@
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:text="script.py"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="@string/default_filename"
+            android:tooltipText="@string/toolbar_filename"
+            android:contentDescription="@string/toolbar_filename"
             android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            android:textSize="14sp" />
 
         <!-- ACTIONS -->
         <LinearLayout
@@ -50,52 +54,62 @@
 
             <ImageView
                 android:id="@+id/btnUndo"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_undo"
                 android:clickable="true"
+                android:tooltipText="@string/toolbar_undo"
+                android:contentDescription="@string/toolbar_undo"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/btnRedo"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_redo"
                 android:clickable="true"
+                android:tooltipText="@string/toolbar_redo"
+                android:contentDescription="@string/toolbar_redo"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/btnEyedropper"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_eyedropper"
                 android:clickable="true"
+                android:tooltipText="@string/toolbar_eyedropper"
+                android:contentDescription="@string/toolbar_eyedropper"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/btnScreenshot"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_screenshot"
                 android:clickable="true"
+                android:tooltipText="@string/toolbar_screenshot"
+                android:contentDescription="@string/toolbar_screenshot"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/btnSearch"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_search"
                 android:clickable="true"
+                android:tooltipText="@string/toolbar_search"
+                android:contentDescription="@string/toolbar_search"
                 android:background="?attr/selectableItemBackgroundBorderless" />
         </LinearLayout>
 

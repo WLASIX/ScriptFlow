@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">ScriptFlow</string>
+
+    <string name="code_editor">Редактор кода</string>
+    <string name="toolbar_menu">Меню</string>
+    <string name="default_filename">script.py</string>
+    <string name="toolbar_filename">Имя файла</string>
+    <string name="toolbar_undo">Отменить</string>
+    <string name="toolbar_redo">Восстановить</string>
+    <string name="toolbar_eyedropper">Пипетка</string>
+    <string name="toolbar_screenshot">Скриншот</string>
+    <string name="toolbar_search">Поиск</string>
+    <string name="action_run">Выполнить</string>
+    <string name="action_stop">Остановить</string>
 </resources>

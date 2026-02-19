@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -26,6 +25,8 @@
                 android:layout_weight="1"
                 android:background="#383838"
                 android:textColor="#FFFFFF"
+                android:importantForAccessibility="no"
+                android:accessibilityLiveRegion="none"
                 android:gravity="top|start"/>
         </LinearLayout>
 
@@ -43,7 +44,8 @@
         android:id="@+id/fabExecute"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Run/Stop"
+        android:contentDescription="@string/action_run"
+        android:tooltipText="@string/action_run"
         android:src="@drawable/ic_start"
         app:backgroundTint="#2ECC71"
         android:layout_gravity="bottom|end"

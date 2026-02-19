@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.drawerlayout.widget.DrawerLayout
 import com.amrdeveloper.codeview.CodeView
@@ -138,19 +139,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderRunState(state: RunState) {
+        fabExecute.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+
         when (state) {
             RunState.Running -> {
                 fabExecute.setImageResource(R.drawable.ic_stop)
                 fabExecute.backgroundTintList =
                     ColorStateList.valueOf("#E53935".toColorInt())
+
+                fabExecute.contentDescription =
+                    getString(R.string.action_stop)
+
+                ViewCompat.setTooltipText(
+                    fabExecute,
+                    getString(R.string.action_stop)
+                )
             }
 
             RunState.Stopped -> {
                 fabExecute.setImageResource(R.drawable.ic_start)
                 fabExecute.backgroundTintList =
                     ColorStateList.valueOf("#2ECC71".toColorInt())
+
+                fabExecute.contentDescription =
+                    getString(R.string.action_run)
+
+                ViewCompat.setTooltipText(
+                    fabExecute,
+                    getString(R.string.action_run)
+                )
             }
         }
     }
+
 
 }

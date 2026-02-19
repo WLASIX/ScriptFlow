@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
+import com.wlaxid.scriptflow.R
 
 class FileController(
     private val activity: ComponentActivity,
@@ -65,8 +66,10 @@ class FileController(
     }
 
     private fun getFileName(uri: Uri): String {
-        return DocumentFile.fromSingleUri(activity, uri)?.name ?: "script.py"
+        return DocumentFile.fromSingleUri(activity, uri)?.name
+            ?: activity.getString(R.string.default_filename)
     }
+
 
     private fun takePermissions(uri: Uri) {
         activity.contentResolver.takePersistableUriPermission(
