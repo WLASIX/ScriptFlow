@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.chaquopy)
 }
 
 android {
@@ -16,6 +17,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     buildTypes {
@@ -45,6 +50,12 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation("io.github.amrdeveloper:codeview:1.3.9")
+    implementation(libs.codeview)
 
+}
+
+chaquopy {
+    defaultConfig {
+        version = "3.14"
+    }
 }

@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         bindViews()
-        runController = RunController()
+        runController = RunController { state -> renderRunState(state) }
         renderRunState(runController.currentState())
         setupEditor()
         setupListeners()
@@ -92,10 +92,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         fabExecute.setOnClickListener {
-            val state = runController.toggle()
+            val state = when (runController.currentState()) {
+                RunState.Stopped -> runController.execute(editorController.getText())
+                RunState.Running -> runController.stop()
+            }
             renderRunState(state)
         }
-
 
         itemOpen.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
