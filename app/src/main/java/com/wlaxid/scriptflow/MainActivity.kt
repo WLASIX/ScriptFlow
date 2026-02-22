@@ -19,6 +19,8 @@ import com.wlaxid.scriptflow.editor.FileController
 import com.wlaxid.scriptflow.runtime.RunController
 import com.wlaxid.scriptflow.runtime.RunState
 import com.wlaxid.scriptflow.ui.toolbar.ToolbarController
+import com.wlaxid.scriptflow.ui.console.ConsoleController
+import com.wlaxid.scriptflow.ui.console.ConsoleOutputPresenter
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,7 +34,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fabExecute: FloatingActionButton
     private lateinit var toolbarController: ToolbarController
     private lateinit var runController: RunController
-
+    private lateinit var consoleController: ConsoleController
+    private lateinit var consoleRoot: View
+    private lateinit var consolePresenter: ConsoleOutputPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,14 +44,28 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         bindViews()
-        runController = RunController { state -> renderRunState(state) }
-        renderRunState(runController.currentState())
+
+        setupConsole()
+
+        runController = RunController(
+            onStateChanged = { state ->
+                renderRunState(state)
+                consolePresenter.onStateChanged(state)
+            },
+            onOutput = { text ->
+                consolePresenter.onOutput(text)
+            },
+            onError = { error ->
+                consolePresenter.onError(error)
+            }
+        )
+
+        observeKeyboard()
         setupEditor()
         setupListeners()
         setupFileController()
         setupToolbar()
         toolbarController.setTitle(editorState.displayName())
-
     }
 
     private fun bindViews() {
@@ -56,14 +74,144 @@ class MainActivity : AppCompatActivity() {
         itemOpen = findViewById(R.id.itemOpen)
         itemSave = findViewById(R.id.itemSave)
         fabExecute = findViewById(R.id.fabExecute)
+        consoleRoot = findViewById(R.id.consoleSheet)
     }
 
+    private fun setupConsole() {
+        consoleController = ConsoleController(consoleRoot)
+        consolePresenter = ConsoleOutputPresenter(consoleController)
+    }
 
     private fun setupEditor() {
         editorController = EditorController(codeView)
         editorController.init()
+        val sample = """# ---------- SCRIPT 1: базовые функции и условия ----------
 
-        editorController.setText("print(\"Hello World\")")
+print("\n--- SCRIPT 1 ---")
+
+def is_even(n):
+    if n % 2 == 0:
+        return True
+    else:
+        return False
+
+for i in range(1, 6):
+    if is_even(i):
+        print(i, "is even")
+    else:
+        print(i, "is odd")
+
+
+# ---------- SCRIPT 2: классы, состояние, nonlocal / global ----------
+
+print("\n--- SCRIPT 2 ---")
+
+counter = 0
+
+class Accumulator:
+    def __init__(self, start):
+        self.value = start
+
+    def add(self, x):
+        self.value += x
+        return self.value
+
+acc = Accumulator(10)
+print("initial acc.value =", acc.value)
+
+def process():
+    nonlocal_flag = 0
+
+    def inner(step):
+        nonlocal nonlocal_flag
+        global counter
+
+        nonlocal_flag += step
+        counter += step
+        acc.add(step)
+
+        print("step =", step)
+        print("  nonlocal_flag =", nonlocal_flag)
+        print("  counter =", counter)
+        print("  acc.value =", acc.value)
+
+    for i in range(3):
+        inner(i + 1)
+
+process()
+
+print("final counter =", counter)
+print("final acc.value =", acc.value)
+
+
+# ---------- SCRIPT 3: генераторы, try/except/finally, while ----------
+
+print("\n--- SCRIPT 3 ---")
+
+def number_stream(limit):
+    i = 0
+    while True:
+        if i >= limit:
+            break
+        yield i
+        i += 1
+
+def consume():
+    total = 0
+    try:
+        for n in number_stream(5):
+            if n == 3:
+                print("skip", n)
+                continue
+            print("got", n)
+            total += n
+    except Exception as e:
+        print("error:", e)
+    finally:
+        print("total =", total)
+
+consume()
+
+flag = False
+while False:
+    pass
+
+
+# ---------- SCRIPT 4: всё сразу для подсветки ----------
+
+print("\n--- SCRIPT 4 ---")
+
+value = 5
+
+assert value is not None
+
+if value > 0 and value < 10:
+    result = True
+else:
+    result = False
+
+print("result =", result)
+
+def outer():
+    x = 1
+    def inner():
+        nonlocal x
+        x += 1
+        return x
+    return inner()
+
+print("outer() =", outer())
+
+for i in range(3):
+    if i == 1:
+        continue
+    if i == 2:
+        break
+    print("loop i =", i)
+"""
+        codeView.post {
+            editorController.setText(sample)
+        }
     }
 
     private fun setupFileController() {
@@ -81,6 +229,23 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun observeKeyboard() {
+        val root = findViewById<View>(android.R.id.content)
+
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = android.graphics.Rect()
+            root.getWindowVisibleDisplayFrame(rect)
+
+            val screenHeight = root.height
+            val keypadHeight = screenHeight - rect.bottom
+
+            val keyboardOpen = keypadHeight > screenHeight * 0.15
+
+            if (keyboardOpen) {
+                consoleController.hide()
+            }
+        }
+    }
 
     private fun setupListeners() {
 
@@ -92,11 +257,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         fabExecute.setOnClickListener {
-            val state = when (runController.currentState()) {
-                RunState.Stopped -> runController.execute(editorController.getText())
-                RunState.Running -> runController.stop()
+            when (runController.currentState()) {
+                RunState.Stopped ->
+                    runController.execute(editorController.getText())
+
+                RunState.Running ->
+                    runController.stop()
             }
-            renderRunState(state)
         }
 
         itemOpen.setOnClickListener {
@@ -115,23 +282,18 @@ class MainActivity : AppCompatActivity() {
                 codeView.isEnabled = false
                 codeView.clearFocus()
                 hideKeyboard()
-
-                fabExecute.hide()
-                fabExecute.isClickable = false
             }
 
             override fun onDrawerClosed(drawerView: View) {
                 codeView.isEnabled = true
                 codeView.requestFocus()
-
-                fabExecute.show()
-                fabExecute.isClickable = true
             }
 
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
             override fun onDrawerStateChanged(newState: Int) {}
         })
     }
+
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(codeView.windowToken, 0)
@@ -143,7 +305,6 @@ class MainActivity : AppCompatActivity() {
         toolbarController = ToolbarController(
             root = toolbarRoot,
             drawerLayout = drawerLayout
-            // остальное пока заглушки
         )
     }
 
@@ -180,6 +341,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
 }

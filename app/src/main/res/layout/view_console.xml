@@ -1,0 +1,44 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/consoleRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#121212">
+
+    <FrameLayout
+        android:id="@+id/consoleHandle"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:background="@android:color/transparent">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center"
+            android:background="#666666" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/consoleTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Console"
+        android:textColor="#AAAAAA"
+        android:padding="8dp" />
+
+    <ScrollView
+        android:id="@+id/consoleScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/consoleOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="monospace"
+            android:padding="8dp" />
+    </ScrollView>
+
+</LinearLayout>

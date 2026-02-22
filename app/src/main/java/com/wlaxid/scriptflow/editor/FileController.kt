@@ -14,7 +14,6 @@ class FileController(
     private val onFileOpened: (Uri, String) -> Unit,
     private val onFileSaved: (Uri, String) -> Unit
 ) {
-
     private val openLauncher: ActivityResultLauncher<Array<String>> =
         activity.registerForActivityResult(
             ActivityResultContracts.OpenDocument()
@@ -47,8 +46,6 @@ class FileController(
             onFileSaved(uri, name)
         }
 
-    // ===== Public API =====
-
     fun open() {
         openLauncher.launch(arrayOf("text/*"))
     }
@@ -56,8 +53,6 @@ class FileController(
     fun save(fileName: String) {
         saveLauncher.launch(fileName)
     }
-
-    // ===== SAF =====
 
     private fun writeFile(uri: Uri) {
         activity.contentResolver.openOutputStream(uri, "wt")?.use {
@@ -69,7 +64,6 @@ class FileController(
         return DocumentFile.fromSingleUri(activity, uri)?.name
             ?: activity.getString(R.string.default_filename)
     }
-
 
     private fun takePermissions(uri: Uri) {
         activity.contentResolver.takePersistableUriPermission(
