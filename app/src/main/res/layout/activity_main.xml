@@ -5,7 +5,8 @@
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1F1F1F">
+    android:fitsSystemWindows="true"
+    android:background="@color/black">
 
     <!-- ОСНОВНОЙ КОНТЕНТ  -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -57,7 +58,7 @@
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <!-- ================= ЛЕВОЕ МЕНЮ ================= -->
+    <!-- ЛЕВОЕ МЕНЮ -->
     <include
         layout="@layout/drawer_menu"
         android:layout_width="280dp"

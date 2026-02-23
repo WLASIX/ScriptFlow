@@ -44,10 +44,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        applyUniversalInsets()
-
         bindViews()
         setupConsole()
 
@@ -217,33 +213,6 @@ for i in range(3):
 """
         codeView.post {
             editorController.setText(sample)
-        }
-    }
-
-    private fun applyUniversalInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
-
-            val status = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            val gestures = insets.getInsets(WindowInsetsCompat.Type.systemGestures())
-            val tappable = insets.getInsets(WindowInsetsCompat.Type.tappableElement())
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-
-            val top = status.top
-
-            val bottom = maxOf(
-                nav.bottom,
-                gestures.bottom,
-                tappable.bottom,
-                ime.bottom
-            )
-
-            val left = maxOf(status.left, gestures.left)
-            val right = maxOf(status.right, gestures.right)
-
-            view.setPadding(left, top, right, bottom)
-
-            insets
         }
     }
 
