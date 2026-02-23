@@ -46,12 +46,8 @@ dependencies {
     implementation(libs.androidx.runtime.saveable)
     implementation(libs.androidx.ui.test)
     implementation(libs.androidx.documentfile)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.codeview)
-
 }
 
 chaquopy {
