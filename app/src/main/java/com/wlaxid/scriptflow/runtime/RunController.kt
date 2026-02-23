@@ -21,10 +21,14 @@ class RunController(
     private var isRunning = false
     private var errorOccurred = false
     private var cancelled = false
-
+    private var currentRunId = 0
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             val action = intent?.action ?: return
+            val runId = intent.getIntExtra(PythonRunnerService.EXTRA_RUN_ID, -1)
+            if (runId != -1 && runId != currentRunId) {
+                return
+            }
 
             when (action) {
                 PythonRunnerService.BROADCAST_STARTED -> {
@@ -78,9 +82,13 @@ class RunController(
 
     fun execute(code: String) {
         if (isRunning) return
+        currentRunId++
+        val runId = currentRunId
+
         val intent = Intent(context, PythonRunnerService::class.java).apply {
             action = PythonRunnerService.ACTION_EXECUTE
             putExtra(PythonRunnerService.EXTRA_CODE, code)
+            putExtra(PythonRunnerService.EXTRA_RUN_ID, runId)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)

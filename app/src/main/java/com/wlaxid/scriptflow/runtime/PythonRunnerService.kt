@@ -28,11 +28,13 @@ class PythonRunnerService : Service() {
 
         const val EXTRA_PID = "extra_pid"
         const val EXTRA_TEXT = "extra_text"
+        const val EXTRA_RUN_ID = "extra_run_id"
     }
 
     private var py: Python? = null
     private var globals: PyObject? = null
     private var execThread: Thread? = null
+    private var currentRunId: Int = -1
 
     override fun onCreate() {
         super.onCreate()
@@ -56,33 +58,42 @@ class PythonRunnerService : Service() {
                 .setOngoing(true)
                 .build()
         )
-
         py = Python.getInstance()
-
-        val pid = Process.myPid()
-        sendBroadcast(
-            Intent(BROADCAST_STARTED)
-                .putExtra(EXTRA_PID, pid)
-        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_EXECUTE -> {
                 val code = intent.getStringExtra(EXTRA_CODE) ?: ""
+                currentRunId = intent.getIntExtra(EXTRA_RUN_ID, -1)
+
+                sendBroadcast(
+                    Intent(BROADCAST_STARTED)
+                        .setPackage(packageName)
+                        .putExtra(EXTRA_PID, Process.myPid())
+                        .putExtra(EXTRA_RUN_ID, currentRunId)
+                )
+
                 executeUserCode(code)
             }
+
             ACTION_STOP -> {
                 try {
                     globals?.callAttr("__setitem__", "__cancelled__", true)
-                } catch (_: Exception) { }
+                } catch (_: Exception) {}
             }
         }
         return START_NOT_STICKY
     }
 
     private fun executeUserCode(code: String) {
-        if (execThread?.isAlive == true) return
+        if (execThread?.isAlive == true) {
+            try {
+                globals?.callAttr("__setitem__", "__cancelled__", true)
+            } catch (_: Exception) {}
+
+            execThread?.join(100)
+        }
 
         execThread = Thread {
             try {
@@ -156,6 +167,7 @@ class PythonRunnerService : Service() {
                         Intent(BROADCAST_OUTPUT)
                             .setPackage(packageName)
                             .putExtra(EXTRA_TEXT, stdout)
+                            .putExtra(EXTRA_RUN_ID, currentRunId)
                     )
                 }
 
@@ -164,6 +176,7 @@ class PythonRunnerService : Service() {
                         Intent(BROADCAST_ERROR)
                             .setPackage(packageName)
                             .putExtra(EXTRA_TEXT, stderr)
+                            .putExtra(EXTRA_RUN_ID, currentRunId)
                     )
                 } else if (isError) {
                     // если ошибка была, но stderr пуст
@@ -171,6 +184,7 @@ class PythonRunnerService : Service() {
                         Intent(BROADCAST_ERROR)
                             .setPackage(packageName)
                             .putExtra(EXTRA_TEXT, "Script failed (no stderr captured)")
+                            .putExtra(EXTRA_RUN_ID, currentRunId)
                     )
                 }
             } catch (t: Throwable) {
@@ -178,11 +192,13 @@ class PythonRunnerService : Service() {
                     Intent(BROADCAST_ERROR)
                         .setPackage(packageName)
                         .putExtra(EXTRA_TEXT, t.stackTraceToString())
+                        .putExtra(EXTRA_RUN_ID, currentRunId)
                 )
             } finally {
                 sendBroadcast(
                     Intent(BROADCAST_FINISHED)
                         .setPackage(packageName)
+                        .putExtra(EXTRA_RUN_ID, currentRunId)
                 )
                 stopSelf()
             }
@@ -193,6 +209,7 @@ class PythonRunnerService : Service() {
                         Intent(BROADCAST_ERROR)
                             .setPackage(packageName)
                             .putExtra(EXTRA_TEXT, "UNCAUGHT:\n${ex.stackTraceToString()}")
+                            .putExtra(EXTRA_RUN_ID, currentRunId)
                     )
                 }
             thread.start()
