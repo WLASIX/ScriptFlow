@@ -1,110 +1,141 @@
 package com.wlaxid.scriptflow.runtime
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import com.chaquo.python.Python
+import android.os.Process
 
 class RunController(
+    private val context: Context,
     private val onStateChanged: (RunState) -> Unit,
     private val onOutput: (String) -> Unit,
     private val onError: (String) -> Unit
 ) {
 
-    @Volatile
-    private var isRunning = false
-
-    private var thread: Thread? = null
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var childPid: Int = -1
+    private var isRunning = false
+    private var errorOccurred = false
+    private var cancelled = false
 
-    fun execute(code: String): RunState {
-        if (isRunning) return currentState()
-        isRunning = true
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            val action = intent?.action ?: return
 
-        mainHandler.post {
-            onStateChanged(RunState.Running)
-        }
+            when (action) {
+                PythonRunnerService.BROADCAST_STARTED -> {
+                    childPid = intent.getIntExtra(PythonRunnerService.EXTRA_PID, -1)
+                    isRunning = true
+                    errorOccurred = false
+                    cancelled = false
+                    mainHandler.post { onStateChanged(RunState.Running) }
+                }
 
-        thread = Thread {
-            try {
-                val py = Python.getInstance()
-                val builtins = py.getModule("builtins")
+                PythonRunnerService.BROADCAST_OUTPUT -> {
+                    val text = intent.getStringExtra(PythonRunnerService.EXTRA_TEXT) ?: ""
+                    mainHandler.post { onOutput(text) }
+                }
 
-                val globals = builtins.callAttr("dict")
-                globals.callAttr("__setitem__", "__builtins__", builtins)
-                globals.callAttr("__setitem__", "__user_code__", code)
+                PythonRunnerService.BROADCAST_ERROR -> {
+                    val text = intent.getStringExtra(PythonRunnerService.EXTRA_TEXT) ?: ""
+                    errorOccurred = true
+                    mainHandler.post { onError(text) }
+                }
 
-                val wrapper =
-                    """
-                    import sys, io, traceback
-                    
-                    buf = io.StringIO()
-                    error = False
-                    
-                    _old_out = sys.stdout
-                    _old_err = sys.stderr
-                    sys.stdout = buf
-                    sys.stderr = buf
-                    
-                    try:
-                        exec(__user_code__, globals(), globals())
-                    except Exception:
-                        error = True
-                        traceback.print_exc()
-                    finally:
-                        sys.stdout = _old_out
-                        sys.stderr = _old_err
-                    
-                    __output__ = buf.getvalue()
-                    __error__ = error
-                    """.trimIndent()
+                PythonRunnerService.BROADCAST_FINISHED -> {
+                    isRunning = false
+                    childPid = -1
 
-                builtins.callAttr("exec", wrapper, globals, globals)
-
-                val output = globals.callAttr("__getitem__", "__output__")
-                    ?.toString()
-                    ?: ""
-
-                val isError = globals.callAttr("__getitem__", "__error__")
-                    ?.toJava(Boolean::class.java)
-                    ?: false
-
-                if (output.isNotBlank()) {
-                    mainHandler.post {
-                        if (isError) {
-                            onError(output)
-                        } else {
-                            onOutput(output)
+                    val finalState =
+                        when {
+                            cancelled -> RunState.Cancelled
+                            errorOccurred -> RunState.Error
+                            else -> RunState.Finished
                         }
-                    }
-                }
 
-            } catch (e: Exception) {
-                mainHandler.post {
-                    onError(e.stackTraceToString())
-                }
-            } finally {
-                isRunning = false
-                mainHandler.post {
-                    onStateChanged(RunState.Stopped)
+                    mainHandler.post { onStateChanged(finalState) }
                 }
             }
-        }.also { it.start() }
-
-        return currentState()
+        }
+    }
+    init {
+        val filter = IntentFilter().apply {
+            addAction(PythonRunnerService.BROADCAST_STARTED)
+            addAction(PythonRunnerService.BROADCAST_OUTPUT)
+            addAction(PythonRunnerService.BROADCAST_ERROR)
+            addAction(PythonRunnerService.BROADCAST_FINISHED)
+        }
+        context.applicationContext.registerReceiver(
+            receiver,
+            filter,
+            Context.RECEIVER_NOT_EXPORTED
+        )
     }
 
-    fun stop(): RunState {
-        thread?.interrupt()
-        thread = null
-        isRunning = false
+    fun execute(code: String) {
+        if (isRunning) return
+        val intent = Intent(context, PythonRunnerService::class.java).apply {
+            action = PythonRunnerService.ACTION_EXECUTE
+            putExtra(PythonRunnerService.EXTRA_CODE, code)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
 
-        mainHandler.post {
-            onStateChanged(RunState.Stopped)
+    fun stop(forceKillImmediately: Boolean = false, killDelayMs: Long = 10) {
+        cancelled = true
+
+        val stopIntent = Intent(context, PythonRunnerService::class.java).apply {
+            action = PythonRunnerService.ACTION_STOP
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(stopIntent)
+        } else {
+            context.startService(stopIntent)
         }
 
-        return currentState()
+        if (forceKillImmediately) {
+            killChildProcess()
+        } else {
+            // даю короткую задержку для братского (нет) завершения, а затем насильно убиваю
+            mainHandler.postDelayed({
+                if (isRunning && childPid > 0) {
+                    killChildProcess()
+                }
+            }, killDelayMs)
+        }
+    }
+
+    private fun killChildProcess() {
+        if (childPid > 0) {
+            try {
+                Process.killProcess(childPid)
+            } catch (_: Exception) { }
+
+            childPid = -1
+            isRunning = false
+            cancelled = true
+
+            mainHandler.post {
+                onStateChanged(RunState.Cancelled)
+            }
+        }
     }
 
     fun currentState(): RunState =
-        if (isRunning) RunState.Running else RunState.Stopped
+        if (isRunning) RunState.Running
+        else RunState.Finished
+
+    fun destroy() {
+        try {
+            context.applicationContext.unregisterReceiver(receiver)
+        } catch (_: Exception) { }
+    }
 }

@@ -2,5 +2,7 @@ package com.wlaxid.scriptflow.runtime
 
 sealed class RunState {
     object Running : RunState()
-    object Stopped : RunState()
+    object Finished : RunState()
+    object Error : RunState()
+    object Cancelled : RunState()
 }

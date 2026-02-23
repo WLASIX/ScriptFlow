@@ -16,9 +16,23 @@ class ConsoleOutputPresenter(
                 )
             }
 
-            RunState.Stopped -> {
+            RunState.Finished -> {
                 consoleController.appendMessage(
                     "=== Finished ===",
+                    ConsoleMessageType.SYSTEM
+                )
+            }
+
+            RunState.Error -> {
+                consoleController.appendMessage(
+                    "=== Finished with errors ===",
+                    ConsoleMessageType.SYSTEM
+                )
+            }
+
+            RunState.Cancelled -> {
+                consoleController.appendMessage(
+                    "=== Cancelled ===",
                     ConsoleMessageType.SYSTEM
                 )
             }

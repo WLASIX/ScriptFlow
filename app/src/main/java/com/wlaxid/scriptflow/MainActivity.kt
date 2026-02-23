@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
         setupConsole()
 
         runController = RunController(
+            this,
             onStateChanged = { state ->
                 renderRunState(state)
                 consolePresenter.onStateChanged(state)
@@ -59,8 +60,8 @@ class MainActivity : AppCompatActivity() {
             onOutput = { text ->
                 consolePresenter.onOutput(text)
             },
-            onError = { error ->
-                consolePresenter.onError(error)
+            onError = { err ->
+                consolePresenter.onError(err)
             }
         )
 
@@ -89,7 +90,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupEditor() {
         editorController = EditorController(codeView)
         editorController.init()
-        val sample = """# ---------- SCRIPT 1: базовые функции и условия ----------
+        val sample =
+            """# ---------- SCRIPT 1: базовые функции и условия ----------
 
 print("\n--- SCRIPT 1 ---")
 
@@ -289,11 +291,12 @@ for i in range(3):
 
         fabExecute.setOnClickListener {
             when (runController.currentState()) {
-                RunState.Stopped ->
+                RunState.Running -> runController.stop()
+                RunState.Finished,
+                RunState.Error,
+                RunState.Cancelled -> {
                     runController.execute(editorController.getText())
-
-                RunState.Running ->
-                    runController.stop()
+                }
             }
         }
 
@@ -339,6 +342,15 @@ for i in range(3):
         )
     }
 
+    override fun onDestroy() {
+        try {
+            runController.destroy()
+        } catch (_: Exception) {
+            // ничего - если runController ещё не инициализирован или уже разрушен
+        }
+        super.onDestroy()
+    }
+
     private fun renderRunState(state: RunState) {
         fabExecute.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
 
@@ -347,30 +359,25 @@ for i in range(3):
                 fabExecute.setImageResource(R.drawable.ic_stop)
                 fabExecute.backgroundTintList =
                     ColorStateList.valueOf("#E53935".toColorInt())
-
-                fabExecute.contentDescription =
-                    getString(R.string.action_stop)
-
-                ViewCompat.setTooltipText(
-                    fabExecute,
-                    getString(R.string.action_stop)
-                )
             }
 
-            RunState.Stopped -> {
+            RunState.Finished -> {
                 fabExecute.setImageResource(R.drawable.ic_start)
                 fabExecute.backgroundTintList =
                     ColorStateList.valueOf("#2ECC71".toColorInt())
+            }
 
-                fabExecute.contentDescription =
-                    getString(R.string.action_run)
+            RunState.Error -> {
+                fabExecute.setImageResource(R.drawable.ic_start)
+                fabExecute.backgroundTintList =
+                    ColorStateList.valueOf("#F39C12".toColorInt()) // оранжевый
+            }
 
-                ViewCompat.setTooltipText(
-                    fabExecute,
-                    getString(R.string.action_run)
-                )
+            RunState.Cancelled -> {
+                fabExecute.setImageResource(R.drawable.ic_start)
+                fabExecute.backgroundTintList =
+                    ColorStateList.valueOf("#95A5A6".toColorInt()) // серый
             }
         }
     }
-
 }
