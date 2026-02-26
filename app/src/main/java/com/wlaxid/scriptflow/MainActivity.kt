@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var itemOpen: LinearLayout
     private lateinit var itemSave: LinearLayout
+    private lateinit var btnQuickSave: View
     private lateinit var fabActionsRoot: View
     private lateinit var editorActionsController: EditorActionsController
     private lateinit var consoleController: ConsoleController
@@ -57,6 +58,8 @@ class MainActivity : AppCompatActivity() {
         itemSave = findViewById(R.id.itemSave)
         fabActionsRoot = findViewById(R.id.fabActionsInclude)
         consoleRoot = findViewById(R.id.consoleSheet)
+
+        btnQuickSave = findViewById(R.id.btnQuickSave)
     }
 
     private fun setupConsole() {
@@ -249,6 +252,13 @@ for i in range(3):
         itemSave.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
             fileController.save(editorState.currentFileName)
+        }
+
+        btnQuickSave.setOnClickListener {
+            fileController.quickSave(
+                editorState.currentFileUri,
+                editorState.currentFileName
+            )
         }
 
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {

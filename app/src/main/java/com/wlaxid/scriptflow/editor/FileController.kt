@@ -54,6 +54,15 @@ class FileController(
         saveLauncher.launch(fileName)
     }
 
+    fun quickSave(currentUri: Uri?, suggestedName: String) {
+        if (currentUri != null) {
+            writeFile(currentUri)
+            onFileSaved(currentUri, getFileName(currentUri))
+        } else {
+            save(suggestedName)
+        }
+    }
+
     private fun writeFile(uri: Uri) {
         activity.contentResolver.openOutputStream(uri, "wt")?.use {
             it.write(editorController.getText().toByteArray())
